@@ -21,3 +21,6 @@ venv/
 # OS
 .DS_Store
 Thumbs.db
+kubectl
+minikube-linux-amd64
+*.Zone.Identifier
