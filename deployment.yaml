@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ml-inference
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ml-inference
+  template:
+    metadata:
+      labels:
+        app: ml-inference
+    spec:
+      containers:
+      - name: ml-inference
+        image: docker.io/library/ml-inference:v1
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 8001
+        resources:
+          requests:
+            cpu: "1"
+            memory: "1G"
+          limits:
+            cpu: "1"
+            memory: "1G"
