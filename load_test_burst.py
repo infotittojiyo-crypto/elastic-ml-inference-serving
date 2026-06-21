@@ -1,0 +1,29 @@
+from barazmoon import BarAzmoon
+import cv2
+import base64
+import json
+
+# Encode image
+im = cv2.imread("zidane.jpg")
+im = cv2.resize(im, dsize=(256, 256), interpolation=cv2.INTER_CUBIC)
+encoded = base64.b64encode(cv2.imencode(".jpeg", im)[1].tobytes()).decode("utf-8")
+data = json.dumps({"data": encoded}).encode("utf-8")
+
+# Professor's actual workload, loaded from file
+with open("workload.txt") as f:
+    workload = [int(x) for x in f.read().split()]
+
+class MLLoadTester(BarAzmoon):
+    def get_request_data(self):
+        return "req-1", data
+
+    def process_response(self, data_id, response):
+        return True
+
+tester = MLLoadTester(
+    endpoint="http://127.0.0.1:46657/infer",
+    workload=workload,
+    http_method="post"
+)
+
+tester.start()

@@ -24,3 +24,7 @@ Thumbs.db
 kubectl
 minikube-linux-amd64
 *.Zone.Identifier
+*.Zone.Identifier
+results_backup/
+*_output.txt
+*_output2.txt

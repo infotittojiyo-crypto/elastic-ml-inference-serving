@@ -9,5 +9,5 @@ im = cv2.resize(im, dsize=(256, 256), interpolation=cv2.INTER_CUBIC)
 encoded = base64.b64encode(cv2.imencode(".jpeg",im)[1].tobytes()).decode("utf-8")
 
 t = time.perf_counter()
-response = requests.post("http://127.0.0.1:44495/infer", data=json.dumps({"data": encoded}))
+response = requests.post("http://127.0.0.1:46657/infer", data=json.dumps({"data": encoded}))
 print(response.text, round(time.perf_counter() - t, 3))

@@ -6,7 +6,9 @@ import io
 import numpy as np
 from aiohttp import web
 import time
+import asyncio
 from prometheus_client import Histogram, Counter, generate_latest, CONTENT_TYPE_LATEST
+from concurrent.futures import ThreadPoolExecutor
 
 preprocessor = ResNet18_Weights.IMAGENET1K_V1.transforms()
 
@@ -15,6 +17,11 @@ torch.set_num_threads(1)
 
 resnet_model = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
 resnet_model.eval()
+# Single-worker executor: ensures inference calls run one at a time per pod,
+# matching the single-CPU-core design (torch.set_num_threads(1)).
+# This keeps the event loop responsive (accepts new connections while
+# computing) without letting multiple inferences contend for the same core.
+inference_executor = ThreadPoolExecutor(max_workers=1)
 
 # Prometheus metrics
 REQUEST_LATENCY = Histogram('inference_latency_seconds', 
@@ -42,7 +49,8 @@ async def infer_handler(request):
     REQUEST_COUNT.inc()
     with REQUEST_LATENCY.time():
         req = await request.json()
-        result = infer(req)
+        loop = asyncio.get_event_loop()
+        result = await loop.run_in_executor(inference_executor, infer, req)
     return web.json_response(result)
 
 async def metrics_handler(request):
