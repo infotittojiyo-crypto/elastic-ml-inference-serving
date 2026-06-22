@@ -9,7 +9,7 @@ im = cv2.resize(im, dsize=(256, 256), interpolation=cv2.INTER_CUBIC)
 encoded = base64.b64encode(cv2.imencode(".jpeg", im)[1].tobytes()).decode("utf-8")
 data = json.dumps({"data": encoded}).encode("utf-8")
 
-# Professor's actual workload, loaded from file
+#  workload, loaded from file
 with open("workload.txt") as f:
     workload = [int(x) for x in f.read().split()]
 

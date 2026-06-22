@@ -28,3 +28,7 @@ minikube-linux-amd64
 results_backup/
 *_output.txt
 *_output2.txt
+*.Zone.Identifier
+results_backup/
+*_output.txt
+*_output2.txt

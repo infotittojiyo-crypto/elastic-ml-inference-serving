@@ -49,8 +49,7 @@ async def infer_handler(request):
     REQUEST_COUNT.inc()
     with REQUEST_LATENCY.time():
         req = await request.json()
-        loop = asyncio.get_event_loop()
-        result = await loop.run_in_executor(inference_executor, infer, req)
+        result = infer(req)
     return web.json_response(result)
 
 async def metrics_handler(request):
