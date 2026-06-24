@@ -1,17 +1,8 @@
-# PyTorch ecosystem (must be installed from official index)
-torch>=2.6.0
-torchvision>=0.21.0
-
-# Networking / APIs
-aiohttp>=3.10.0
-requests>=2.32.0
-
-# Vision / imaging
-opencv-python-headless>=4.10.0
-pillow>=11.0.0
-
-# Numerical stack (important for Python 3.13 compatibility)
-numpy>=2.1.0
-
-# Monitoring
-prometheus-client>=0.21.0
+torch==2.3.0
+torchvision==0.18.0
+aiohttp==3.9.5
+opencv-python-headless==4.10.0.84
+requests==2.32.3
+pillow==10.2.0
+numpy
+prometheus-client==0.25.0
