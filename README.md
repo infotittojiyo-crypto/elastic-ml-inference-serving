@@ -67,8 +67,15 @@ docker build -t ml-inference .
 ### Testing
 Add any `.jpg` image to the project folder named `zidane.jpg`, then run:
 ```bash
+export DISPATCHER_ENDPOINT="<dispatcher-url>/infer"
 python3 client.py
 ```
+
+If you are using Minikube and need a local dispatcher URL, start the service and use the forwarded endpoint:
+```bash
+minikube service dispatcher-service --url
+```
+Then set the returned URL as `DISPATCHER_ENDPOINT` before running `client.py`.
 
 ### Load test
 ```bash

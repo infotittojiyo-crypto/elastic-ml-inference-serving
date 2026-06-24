@@ -2,6 +2,15 @@ from barazmoon import BarAzmoon
 import cv2
 import base64
 import json
+import os
+import argparse
+
+DEFAULT_ENDPOINT = os.environ.get("DISPATCHER_ENDPOINT", "http://127.0.0.1:30000/infer")
+
+parser = argparse.ArgumentParser(description="Run load test against dispatcher endpoint")
+parser.add_argument("--endpoint", default=DEFAULT_ENDPOINT,
+                    help="Dispatcher endpoint URL (default from DISPATCHER_ENDPOINT or localhost:30000)")
+args = parser.parse_args()
 
 # Encode image
 im = cv2.imread("zidane.jpg")
@@ -19,10 +28,11 @@ class MLLoadTester(BarAzmoon):
     def process_response(self, data_id, response):
         return True
 
-tester = MLLoadTester(
-    endpoint="http://127.0.0.1:35277/infer",
-    workload=workload,
-    http_method="post"
-)
+if __name__ == "__main__":
+    tester = MLLoadTester(
+        endpoint=args.endpoint,
+        workload=workload,
+        http_method="post"
+    )
 
-tester.start()
+    tester.start()
