@@ -14,10 +14,11 @@ spec:
     spec:
       containers:
       - name: ml-inference
-        image: docker.io/library/ml-inference:v1
+        image: ml-inference:v7
         imagePullPolicy: Never
         ports:
-        - containerPort: 8001
+        - name: http
+          containerPort: 8001
         resources:
           requests:
             cpu: "1"

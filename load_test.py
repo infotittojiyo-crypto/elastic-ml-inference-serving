@@ -1,3 +1,10 @@
+# load_test.py — replays the workload trace against the dispatcher using barazmoon.
+#
+# Requires a test image named "zidane.jpg" in this folder (any JPEG; not included).
+#
+# Uses the stable port-forward endpoint (localhost:8000), set up with:
+#   kubectl port-forward svc/dispatcher-service 8000:8000
+
 from barazmoon import BarAzmoon
 import cv2
 import base64
@@ -9,8 +16,14 @@ im = cv2.resize(im, dsize=(256, 256), interpolation=cv2.INTER_CUBIC)
 encoded = base64.b64encode(cv2.imencode(".jpeg", im)[1].tobytes()).decode("utf-8")
 data = json.dumps({"data": encoded}).encode("utf-8")
 
-#  workload
-workload = [7,6,7,6,7,8,7,7,7,8,6,9,9,7,7,9,7,7,8,8,8,7,6,7,5,7,8,10,7,5,8,7,8,6,8,6,7,8,6,8,7,7,6,6,6,7,8,6,6,6,6,5,7,7,7,8,8,8,6,5,9,6,7,6,7,7,6,8,8,8,5,8,8,7,6,5,8,6,4,5,7,6,6,7,6,7,5,6,6,6,6,8,6,7,7,8,6,6,5,7,7,7,8,8,7,5,7,6,6,6,6,8,7,7,8,8,6,7,8,7,10,6,8,7,8,6,6,7,7,9,6,7,9,8,7,7,8,6,5,6,8,7,8,6,7,6,8,6,6,9,6,9,8,9,7,6,9,8,8,10,7,8,7,6,8,7,5,6,6,6,7,7,8,6,7,5,7,6,9,6,6,7,9,5,10,6,6,8,5,5,8,8,7,6,6,9,8,8,9,7,10,8,6,8,8,6,6,7,5,7,10,9,6,8,8,5,8,9,8,8,7,8,9,6,8,7,7,7,8,7,9,10,6,7,8,7,7,8,7,7,7,7,6,7,7,7,6,9,7,6,6,7,6,8,20,17,20,28,28,30,32,31,30,36,30,32,35,31,36,31,35,35,37,38,36,32,32,36,38,36,35,44,36,37,36,37,35,37,35,38,32,36,35,33,41,34,32,36,38,41,37,42,37,38,44,36,35,36,36,35,39,37,37,37,33,40,42,38,36,33,41,43,37,33,41,42,35,37,36,35,35,35,32,38,38,41,35,35,38,38,40,38,43,40,36,41,39,33,37,35,32,31,36,34,30,32,32,32,30,35,34,31,30,33,37,30,30,34,31,34,33,34,32,33,36,33,29,32,33,34,37,34,37,31,33,32,37,33,33,36,38,36,32,34,34,32,35,35,39,32,35,39,31,36,38,37,34,36,37,33,35,34,33,35,34,31,33,33,29,25,27,28,28,25,26,30,28,28,32,29,28,24,27,22,24,27,20,18,20,21,17,20,19,19,19,17,20,18,18,20,19,18,20,22,16,19,16,14,13,15,12,18,19,20,21,19,18,18,18,14,16,14,15,14,12,12,13,12,12,14,13,11,11,10,7,7,11,9,9,6,7,8,8,8,8,6,8,9,7,6,7,9,9,8,8,7,11,8,7,8,6,8,7,9,9,7,7,7,7,10,6,9,7,7,7,8,9,7,10,7,6,7,7,6,6,9,8,8,6,7,10,8,10,7,7,7,9,7,8,6,5,7,7,8,7,7,8,9,5,8,8,7,8,8,9,8,9,8,9,9,8,8,8,8,8,9,7,8,9,7,7,6,6,8,10,8,8,7,7,7,10,5,8,6,6,8,7,7,8,8,9,9,7,7,8,9,9,8,10,8,8,5,10,7,9,9,7,10,7,6,8,11,8,7,8,9,6,7,7,8]
+# Workload is read from workload_scaled.txt (peak 36 req/s), NOT the original
+# workload.txt (peak 44 req/s). The original peak exceeds our cluster's measured
+# throughput ceiling (~36-38 req/s at 5 single-core pods), which caused unavoidable
+# drops. Per the instructor's guidance ("scale down the request workload to match
+# your resources"), we scaled the trace by 0.818, preserving its shape. See REPORT.md.
+with open("workload_scaled.txt") as f:
+    workload = [int(x) for x in f.read().split()]
+
 
 class MLLoadTester(BarAzmoon):
     def get_request_data(self):
@@ -19,8 +32,9 @@ class MLLoadTester(BarAzmoon):
     def process_response(self, data_id, response):
         return True
 
+
 tester = MLLoadTester(
-    endpoint="http://127.0.0.1:35277/infer",
+    endpoint="http://localhost:8000/infer",
     workload=workload,
     http_method="post"
 )

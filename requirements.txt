@@ -1,8 +1,20 @@
-torch==2.3.0
-torchvision==0.18.0
+# Python dependencies — install inside a Python 3.11 virtualenv on Ubuntu/WSL2 ONLY.
+#
+# IMPORTANT: torch/torchvision MUST be installed from the PyTorch CPU index, and
+# barazmoon MUST be installed from its git repo. Run those two lines manually:
+#
+#   pip install torch==2.3.0 torchvision==0.18.0 --index-url https://download.pytorch.org/whl/cpu
+#   pip install git+https://github.com/reconfigurable-ml-pipeline/load_tester
+#
+# The remaining packages: pip install -r requirements.txt
+
 aiohttp==3.9.5
 opencv-python-headless==4.10.0.84
 requests==2.32.3
 pillow==10.2.0
 numpy
 prometheus-client==0.25.0
+kubernetes
+
+# NOTE: opencv-python-headless (NOT opencv-python) — avoids GUI/X11 system libs
+# that are absent on WSL/servers and cause import errors.

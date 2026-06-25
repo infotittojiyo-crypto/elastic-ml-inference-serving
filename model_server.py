@@ -1,3 +1,18 @@
+# model_server.py — ResNet18 CPU inference service.
+#
+# Based on the course handout (practical_HandsOn.md), with these additions:
+#   1. Prometheus instrumentation:
+#        - Histogram inference_latency_seconds  (server-side latency; used for p99)
+#        - Counter   inference_requests_total   (throughput / completion rate)
+#        - a /metrics endpoint scraped by Prometheus via servicemonitor.yaml
+#   2. torch.set_num_threads(1) and set_num_interop_threads(1) are REQUIRED:
+#        each pod is limited to exactly 1 CPU core (assignment constraint).
+#
+# Design note: the inference handler is intentionally SYNCHRONOUS. We tested an
+# async run_in_executor variant (image v5) and a single-worker executor (v6);
+# both increased latency under load, so we reverted to this simple version (v7).
+# Listens on port 8001 (/infer, /metrics).
+
 from torchvision.models import resnet18, ResNet18_Weights
 import torch
 import base64
@@ -6,28 +21,25 @@ import io
 import numpy as np
 from aiohttp import web
 import time
-import asyncio
-from prometheus_client import Histogram, Counter, generate_latest, CONTENT_TYPE_LATEST
-from concurrent.futures import ThreadPoolExecutor
+from prometheus_client import Histogram, Counter, generate_latest
 
 preprocessor = ResNet18_Weights.IMAGENET1K_V1.transforms()
 
+# REQUIRED: each pod has a CPU request/limit of 1 core, so inference must be
+# single-threaded. Removing these lets PyTorch grab multiple threads and breaks
+# the 1-core resource model.
 torch.set_num_interop_threads(1)
 torch.set_num_threads(1)
 
 resnet_model = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
 resnet_model.eval()
-# Single-worker executor: ensures inference calls run one at a time per pod,
-# matching the single-CPU-core design (torch.set_num_threads(1)).
-# This keeps the event loop responsive (accepts new connections while
-# computing) without letting multiple inferences contend for the same core.
-inference_executor = ThreadPoolExecutor(max_workers=1)
 
-# Prometheus metrics
-REQUEST_LATENCY = Histogram('inference_latency_seconds', 
+# Prometheus metrics (scraped at /metrics by the ServiceMonitor).
+REQUEST_LATENCY = Histogram('inference_latency_seconds',
                             'Time spent processing inference request')
-REQUEST_COUNT = Counter('inference_requests_total', 
-                       'Total number of inference requests')
+REQUEST_COUNT = Counter('inference_requests_total',
+                        'Total number of inference requests')
+
 
 def infer(d):
     t = time.perf_counter()
@@ -35,7 +47,7 @@ def infer(d):
     inp = Image.open(io.BytesIO(decoded))
     inp = np.array(preprocessor(inp))
     inp = torch.from_numpy(np.array([inp]))
-    
+
     preds = resnet_model(inp)
     labels = []
     for idx in list(preds[0].sort()[1])[-1:-6:-1]:
@@ -43,7 +55,9 @@ def infer(d):
     print("Server-side processing took:", round(time.perf_counter() - t, 3))
     return labels
 
+
 app = web.Application()
+
 
 async def infer_handler(request):
     REQUEST_COUNT.inc()
@@ -52,9 +66,10 @@ async def infer_handler(request):
         result = infer(req)
     return web.json_response(result)
 
+
 async def metrics_handler(request):
-    return web.Response(body=generate_latest(), 
-                       content_type="text/plain")
+    return web.Response(body=generate_latest(), content_type="text/plain")
+
 
 app.add_routes([
     web.post("/infer", infer_handler),

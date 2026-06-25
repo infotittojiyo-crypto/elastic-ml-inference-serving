@@ -1,34 +1,33 @@
-# Python
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.Python
-*.egg-info/
-dist/
-build/
-
-
-# Test images only
-zidane.jpg
-
-
-# Environment
-.env
-venv/
-.venv/
-
-# OS
-.DS_Store
-Thumbs.db
+# Large binaries (do not commit)
 kubectl
 minikube-linux-amd64
-*.Zone.Identifier
-*.Zone.Identifier
+
+# Virtual env / caches
+venv/
+__pycache__/
+*.pyc
+
+# Copyright image (professor supplies own)
+zidane.jpg
+
+# Windows metadata junk
+*:Zone.Identifier
+
+# Debug logs and scratch files from development
+burst_output*.txt
+exp1_custom.txt
+exp1_scaled.txt
+exp2_scaled.txt
+exp3_scaled.txt
+final_attempt.txt
+final_test.txt
+loadtest_output*.txt
+plot_output.txt
+load_test_burst.py
+
+# Superseded result files (keep only the *_scaled.csv used in the report)
+results_custom.csv
+results_custom_final.csv
+results_hpa70.csv
+results_hpa90.csv
 results_backup/
-*_output.txt
-*_output2.txt
-*.Zone.Identifier
-results_backup/
-*_output.txt
-*_output2.txt
